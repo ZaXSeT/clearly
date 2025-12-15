@@ -130,16 +130,19 @@ export async function POST(req: Request) {
 
         // Real AI Call via Google Gemini
         const genAI = new GoogleGenerativeAI(apiKey);
-        // Using 'gemini-flash-lite-latest' as it is explicitly available in the user's model list
+
+        // Use 'gemini-flash-lite-latest' (confirmed available) but move system prompt to message body
+        // to avoid potential support issues with systemInstruction on lite models.
         const model = genAI.getGenerativeModel({
             model: "gemini-flash-lite-latest",
-            systemInstruction: systemPrompt
         });
+
+        const combinedPrompt = `${systemPrompt}\n\nIMPORTANT: Return only raw JSON. No markdown formatting.\n\nUser Input:\n${input}`;
 
         try {
             const result = await model.generateContent({
                 contents: [
-                    { role: "user", parts: [{ text: input }] }
+                    { role: "user", parts: [{ text: combinedPrompt }] }
                 ],
                 generationConfig: {
                     responseMimeType: "application/json",
@@ -147,12 +150,18 @@ export async function POST(req: Request) {
             });
 
             const responseText = result.response.text();
+            console.log("AI Raw Response:", responseText); // Debug: Log exact output
+
             if (!responseText) throw new Error("Empty response from AI");
 
-            const responseData = JSON.parse(responseText);
+            // Sanitize JSON if model adds markdown code blocks
+            const cleanText = responseText.replace(/```json|```/g, "").trim();
+
+            const responseData = JSON.parse(cleanText);
             return NextResponse.json({ result: responseData, source: "ai" });
 
-        } catch (aiError) {
+        } catch (aiError: any) {
+            console.error("AI Gen Failed Details:", aiError?.message, aiError?.response);
             console.warn("AI Generation Failed, attempting fallback to rule-based logic.", aiError);
             const fallbackData = getFallbackResponse(mode, input);
             return NextResponse.json({ result: fallbackData, source: "fallback" });

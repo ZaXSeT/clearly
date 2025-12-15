@@ -52,7 +52,14 @@ export default function HomePage() {
                 body: JSON.stringify({ mode: tool, input }),
             });
 
-            const data = await res.json();
+            const text = await res.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("Failed to parse API response:", text);
+                throw new Error("Server returned an invalid response (not JSON).");
+            }
 
             if (!res.ok) {
                 throw new Error(data.error || "Failed to process request");
