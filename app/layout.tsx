@@ -18,9 +18,7 @@ export default function RootLayout({
     return (
         <html lang="en" className={inter.variable}>
             <body className={cn("min-h-screen bg-background text-primary font-sans antialiased")}>
-                <main className="max-w-2xl mx-auto px-6 py-12">
-                    {children}
-                </main>
+                {children}
             </body>
         </html>
     );

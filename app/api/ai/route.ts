@@ -130,9 +130,9 @@ export async function POST(req: Request) {
 
         // Real AI Call via Google Gemini
         const genAI = new GoogleGenerativeAI(apiKey);
-        // Using 'gemini-flash-latest' as it is a stable alias that generally works
+        // Using 'gemini-flash-lite-latest' as it is explicitly available in the user's model list
         const model = genAI.getGenerativeModel({
-            model: "gemini-flash-latest",
+            model: "gemini-flash-lite-latest",
             systemInstruction: systemPrompt
         });
 
